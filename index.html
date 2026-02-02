@@ -1,1 +1,67 @@
-index.htmlindex.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Stream Link Generator</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎥 Live Stream Link Generator</h1>
+            <p>Enter your M3U8 stream URL to generate a live streaming link</p>
+        </div>
+
+        <div class="form-container">
+            <div class="input-group">
+                <label for="streamUrl">Live Stream URL (M3U8)</label>
+                <textarea 
+                    id="streamUrl" 
+                    placeholder="Paste your M3U8 URL here (e.g., https://example.cloudfront.net/index_1.m3u8?signature=...)"
+                    rows="4"
+                ></textarea>
+            </div>
+
+            <div class="input-group">
+                <label for="authToken">Authorization Token (Optional)</label>
+                <textarea 
+                    id="authToken" 
+                    placeholder="Paste your JWT token here (if required)"
+                    rows="3"
+                ></textarea>
+            </div>
+
+            <button id="generateBtn" class="generate-btn">
+                🔗 Generate Live Link
+            </button>
+
+            <div id="result" class="result-container" style="display: none;">
+                <h3>✅ Live Stream Link Generated</h3>
+                <div class="link-box">
+                    <input type="text" id="generatedLink" readonly>
+                    <button id="copyBtn" class="copy-btn">📋 Copy</button>
+                </div>
+                <div class="action-buttons">
+                    <button id="openBtn" class="open-btn">▶️ Open Live Stream</button>
+                    <button id="resetBtn" class="reset-btn">🔄 Generate New</button>
+                </div>
+                <div class="info">
+                    <p>⏰ Link will expire when stream ends</p>
+                    <p>🌐 Compatible with Chrome, Firefox, Safari, Edge</p>
+                </div>
+            </div>
+
+            <div id="error" class="error-container" style="display: none;">
+                <p id="errorMessage"></p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Powered by HLS.js • Secure & Fast Streaming</p>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
