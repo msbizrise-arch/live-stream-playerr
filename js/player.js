@@ -15,7 +15,11 @@ const PLAYER_CONFIG = {
         levelLoadingTimeOut: 10000,
         levelLoadingMaxRetry: 4,
         fragLoadingTimeOut: 20000,
-        fragLoadingMaxRetry: 6
+        fragLoadingMaxRetry: 6,
+        xhrSetup: function(xhr, url) {
+            // Add custom headers if needed
+            xhr.withCredentials = false;
+        }
     }
 };
 
@@ -165,25 +169,31 @@ function updateViewerCount() {
 // ========== HLS PLAYER INITIALIZATION ==========
 
 /**
- * Initialize HLS player
+ * Initialize HLS player with PROXY
  */
 function initializePlayer(streamUrl, token) {
     console.log('🎥 Initializing HLS Player');
-    console.log('Stream URL:', streamUrl);
+    console.log('Original Stream URL:', streamUrl);
     
-    showLoading('Loading stream...');
+    showLoading('Connecting through proxy...');
+    
+    // ========== USE PROXY URL ==========
+    const baseUrl = window.location.origin;
+    const proxyUrl = `${baseUrl}/api/proxy/stream?url=${encodeURIComponent(streamUrl)}${token ? `&token=${encodeURIComponent(token)}` : ''}`;
+    
+    console.log('🔄 Using Proxy URL');
     
     // Check HLS.js support
     if (!Hls.isSupported()) {
         // Fallback for native HLS support (Safari)
         if (player.video.canPlayType('application/vnd.apple.mpegurl')) {
             console.log('✅ Using native HLS support');
-            player.video.src = streamUrl;
+            player.video.src = proxyUrl;
             setupVideoEvents();
             hideLoading();
             return;
         } else {
-            showError('⚠️ Your browser does not support HLS playback. Please use a modern browser like Chrome, Firefox, or Safari.');
+            showError('⚠️ Your browser does not support HLS playback. Please use Chrome, Firefox, or Safari.');
             return;
         }
     }
@@ -191,8 +201,8 @@ function initializePlayer(streamUrl, token) {
     // Create HLS instance
     hls = new Hls(PLAYER_CONFIG.hlsConfig);
     
-    // Load source
-    hls.loadSource(streamUrl);
+    // Load source through PROXY
+    hls.loadSource(proxyUrl);
     hls.attachMedia(player.video);
     
     // Setup HLS events
@@ -254,7 +264,7 @@ function setupHlsEvents() {
                     handleMediaError(data);
                     break;
                 default:
-                    showError('⚠️ Fatal error: Unable to play stream');
+                    showError('⚠️ Fatal error: Unable to play stream. The stream may have ended or URL expired.');
                     break;
             }
         }
@@ -284,7 +294,7 @@ function setupVideoEvents() {
     
     player.video.addEventListener('error', (e) => {
         console.error('Video error:', e);
-        showError('⚠️ Video playback error');
+        showError('⚠️ Video playback error. Stream may have ended.');
     });
     
     // Update info periodically
@@ -313,7 +323,7 @@ function handleNetworkError(data) {
             hls.startLoad();
         }, PLAYER_CONFIG.retryDelay);
     } else {
-        showError('⚠️ Network error: Unable to connect to stream. Please check your connection and try again.');
+        showError('⚠️ Network error: Unable to connect to stream. The stream may have ended or your internet connection is unstable.');
     }
 }
 
@@ -331,7 +341,7 @@ function handleMediaError(data) {
             hls.recoverMediaError();
         }, PLAYER_CONFIG.retryDelay);
     } else {
-        showError('⚠️ Media error: Unable to decode stream. The stream may have ended.');
+        showError('⚠️ Media error: Unable to decode stream. The stream may have ended or the URL has expired.');
     }
 }
 
@@ -426,7 +436,7 @@ document.addEventListener('DOMContentLoaded', () => {
     streamData = getStreamDataFromUrl();
     
     if (!streamData || !streamData.url) {
-        showError('⚠️ Invalid stream link. Please generate a new link.');
+        showError('⚠️ Invalid stream link. Please generate a new link from the home page.');
         return;
     }
     
@@ -440,12 +450,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     console.log('Stream data:', {
-        url: streamData.url,
+        urlLength: streamData.url.length,
         hasToken: !!streamData.token,
         generated: streamData.generated
     });
     
-    // Initialize player
+    // Initialize player with PROXY
     initializePlayer(streamData.url, streamData.token);
     
     // Update viewer count periodically
